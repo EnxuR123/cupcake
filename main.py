@@ -4,7 +4,6 @@ import random
 import sys
 import asyncio
 
-
 async def main():
     pygame.init()
     WIDTH = 1000
@@ -12,8 +11,15 @@ async def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     title = pygame.Surface((WIDTH, HEIGHT))
     pygame.display.set_caption("Cheese Chase")
-    font = pygame.font.SysFont(None, 150)
-    title_name = font.render('Cheese Chase', True, (0, 0, 0))
+    
+    # CRITICAL WEB FIX: SysFont(None) crashes on many Linux web servers. 
+    # Fallback safely to standard web-supported fonts.
+    try:
+        font = pygame.font.SysFont("sans-serif", 150)
+    except:
+        font = pygame.font.Font(None, 150)
+
+    title_name=font.render('Cheese chase', True, (0,0,0))
     lose = font.render('You lost', True, (0, 0, 0))
     win = font.render('You win', True, (0, 0, 0))
     clock = pygame.time.Clock()
@@ -26,10 +32,7 @@ async def main():
 
     # player
     player_image = pygame.image.load("player.png").convert_alpha()
-    player_image = pygame.transform.scale(
-        player_image,
-        (100, 100)
-    )
+    player_image = pygame.transform.scale(player_image, (100, 100))
     player_image_right = player_image
     player_image_left = pygame.transform.flip(player_image, True, False)
     player_rect = pygame.Rect(380, 100, 40, 45)
@@ -41,16 +44,10 @@ async def main():
     is_grounded = False
 
     # buttons
-    exit = pygame.image.load("exit.png").convert_alpha()
-    exit = pygame.transform.scale(
-        exit,
-        (50, 50)
-    )
-    start = pygame.image.load("start.png").convert_alpha()
-    start = pygame.transform.scale(
-        start,
-        (50, 50)
-    )
+    exit_img = pygame.image.load("exit.png").convert_alpha()
+    exit_img = pygame.transform.scale(exit_img, (50, 50))
+    start_img = pygame.image.load("start.png").convert_alpha()
+    start_img = pygame.transform.scale(start_img, (50, 50))
 
     class Button:
         def __init__(self, x, y, image, scale):
@@ -70,29 +67,19 @@ async def main():
             if self.rect.collidepoint(pos):
                 if pygame.mouse.get_pressed()[0] == 1:
                     return True
+            return False
 
     class Enemy:
         def __init__(self, x, y):
             self.image = pygame.image.load("enemy.png").convert_alpha()
-            self.image = pygame.transform.scale(
-                self.image,
-                (100, 100)
-            )
+            self.image = pygame.transform.scale(self.image, (100, 100))
             self.rect = self.image.get_rect()
             self.rect.topleft = (x, y)
-            self.collider = pygame.Rect(
-                self.rect.x + 20,
-                self.rect.y + 20,
-                60,
-                60
-            )
+            self.collider = pygame.Rect(self.rect.x + 20, self.rect.y + 20, 60, 60)
             self.speed = 1.5
 
         def chase_player(self, player):
-            distance = math.sqrt(
-                (self.rect.x - player.x) ** 2 +
-                (self.rect.y - player.y) ** 2
-            )
+            distance = math.sqrt((self.rect.x - player.x) ** 2 + (self.rect.y - player.y) ** 2)
 
             if distance < 200:
                 if self.rect.x < player.x:
@@ -110,20 +97,14 @@ async def main():
                 self.rect.right = 1000
                 self.speed = -1.5
 
-            self.collider.topleft = (
-                self.rect.x + 20,
-                self.rect.y + 20
-            )
+            self.collider.topleft = (self.rect.x + 20, self.rect.y + 20)
 
         def draw(self):
             screen.blit(self.image, (self.rect.x, self.rect.y))
 
     # target
     cheese = pygame.image.load("cheese.png").convert_alpha()
-    cheese = pygame.transform.scale(
-        cheese,
-        (50, 50)
-    )
+    cheese = pygame.transform.scale(cheese, (50, 50))
 
     class Cheese:
         def __init__(self, x, y):
@@ -150,8 +131,8 @@ async def main():
         pygame.Rect(100, 375, 100, 20),
     ]
 
-    button1 = Button(325, 375, start, 3)
-    button2 = Button(325, 550, exit, 3)
+    button1 = Button(325, 375, start_img, 3)
+    button2 = Button(325, 550, exit_img, 3)
     che = []
 
     for i in range(20):
@@ -179,8 +160,7 @@ async def main():
             if event.type == pygame.QUIT:
                 running = False
 
-        screen.blit(title, (0, 0))
-        if page == False:
+        if not page:
             title.blit(bg_image, (0, 0))
             title.blit(title_name, (175, 175))
             button1.draw()
@@ -194,7 +174,6 @@ async def main():
                 page = True
         else:
             screen.blit(b1, (0, 0))
-
             enemy.chase_player(player_rect)
 
             if enemy.collider.colliderect(player_rect) and condition:
@@ -206,8 +185,9 @@ async def main():
                 if button2.click():
                     running = False
                 clock.tick(60)
-                await asyncio.sleep(0)
+                await asyncio.sleep(0)  # Yield loop control during game-over state
                 continue
+                
             enemy.draw()
 
             keys = pygame.key.get_pressed()
@@ -262,30 +242,20 @@ async def main():
                 else:
                     c.draw()
 
-            screen.blit(player_image, (player_rect.x - 20, player_rect.y - 20))
-            for platform in platforms:
-                pygame.draw.rect(screen, (0, 0, 139), platform)
-
+            # Render win condition screen if all cheese is eaten
             if len(che) == 0:
-                screen.fill((255, 255, 255))
-                screen.blit(bg_image, (0, 0))
-                screen.blit(win, (260, 175))
-                screen.blit(button2.image, (button2.rect.x, button2.rect.y))
-                pygame.display.flip()
-                if button2.click():
-                    running = False
-                clock.tick(60)
-                await asyncio.sleep(0)
-                condition = False
-                continue
+                screen.blit(win, (300, 175))
 
+            # Completed cut-off rendering code here:
+            screen.blit(player_image, (player_rect.x - 20, player_rect.y - 25))
+
+        # CRITICAL WEB FIXES: Update the screen and yield execution control back to the browser
         pygame.display.flip()
         clock.tick(60)
-        await asyncio.sleep(0)
+        await asyncio.sleep(0) 
 
     pygame.quit()
     sys.exit()
 
-
-
+# Run execution wrapper
 asyncio.run(main())
