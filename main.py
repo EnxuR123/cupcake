@@ -150,8 +150,8 @@ async def main():
         pygame.Rect(100, 375, 100, 20),
     ]
 
-    button1 = Button(325, 375, start, 3)
-    button2 = Button(325, 550, exit, 3)
+    button1 = Button(350, 375, start, 3)
+    button2 = Button(350, 550, exit, 3)
     che = []
 
     for i in range(20):
@@ -182,7 +182,7 @@ async def main():
         screen.blit(title, (0, 0))
         if page == False:
             title.blit(bg_image, (0, 0))
-            title.blit(title_name, (175, 175))
+            title.blit(title_name, (155, 175))
             button1.draw()
             button2.draw()
             screen.blit(title, (0, 0))
@@ -200,7 +200,7 @@ async def main():
             if enemy.collider.colliderect(player_rect) and condition:
                 screen.fill((255, 255, 255))
                 screen.blit(bg_image, (0, 0))
-                screen.blit(lose, (260, 175))
+                screen.blit(lose, (275, 175))
                 screen.blit(button2.image, (button2.rect.x, button2.rect.y))
                 pygame.display.flip()
                 if button2.click():
@@ -269,7 +269,7 @@ async def main():
             if len(che) == 0:
                 screen.fill((255, 255, 255))
                 screen.blit(bg_image, (0, 0))
-                screen.blit(win, (260, 175))
+                screen.blit(win, (275, 175))
                 screen.blit(button2.image, (button2.rect.x, button2.rect.y))
                 pygame.display.flip()
                 if button2.click():
