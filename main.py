@@ -4,7 +4,6 @@ import random
 import sys
 import asyncio
 
-
 async def main():
     pygame.init()
     WIDTH = 1000
